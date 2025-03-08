@@ -12,6 +12,7 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as ClientImport } from './routes/client'
+import { Route as AdminImport } from './routes/admin'
 
 // Create/Update Routes
 
@@ -21,10 +22,23 @@ const ClientRoute = ClientImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const AdminRoute = AdminImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRoute,
+} as any)
+
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminImport
+      parentRoute: typeof rootRoute
+    }
     '/client': {
       id: '/client'
       path: '/client'
@@ -38,32 +52,37 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 export interface FileRoutesByFullPath {
+  '/admin': typeof AdminRoute
   '/client': typeof ClientRoute
 }
 
 export interface FileRoutesByTo {
+  '/admin': typeof AdminRoute
   '/client': typeof ClientRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
+  '/admin': typeof AdminRoute
   '/client': typeof ClientRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/client'
+  fullPaths: '/admin' | '/client'
   fileRoutesByTo: FileRoutesByTo
-  to: '/client'
-  id: '__root__' | '/client'
+  to: '/admin' | '/client'
+  id: '__root__' | '/admin' | '/client'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
+  AdminRoute: typeof AdminRoute
   ClientRoute: typeof ClientRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
+  AdminRoute: AdminRoute,
   ClientRoute: ClientRoute,
 }
 
@@ -77,8 +96,12 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
+        "/admin",
         "/client"
       ]
+    },
+    "/admin": {
+      "filePath": "admin.tsx"
     },
     "/client": {
       "filePath": "client.tsx"
