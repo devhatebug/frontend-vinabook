@@ -15,9 +15,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useState } from "react";
+import { api } from "@/api/api.ts";
+
+interface InfoBuyFormProps {
+  idBook: string;
+}
 
 const formSchema = z.object({
-  name: z.string().min(2, {
+  nameClient: z.string().min(2, {
     message: "Tên phải có ít nhất 2 ký tự.",
   }),
   phoneNumber: z.string().regex(/^(0|\+84)[3|5|7|8|9][0-9]{8}$/, {
@@ -30,31 +35,38 @@ const formSchema = z.object({
   note: z.string().optional(),
 });
 
-export default function InfoBuyForm() {
+export default function InfoBuyForm({ idBook }: InfoBuyFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      nameClient: "",
       phoneNumber: "",
       address: "",
       note: "",
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log(values);
+    try {
+      await api.post("/order", {
+        idBook,
+        ...values,
+      });
       toast.success(
         "Đã gửi thông tin thành công. Chúng tôi sẽ liên hệ với bạn sớm nhất có thể.",
       );
       setIsSubmitting(false);
-      form.reset();
-    }, 1000);
+    } catch (error) {
+      console.error(error);
+      toast.error("Đã xảy ra lỗi khi gửi thông tin. Vui lòng thử lại sau.");
+      setIsSubmitting(false);
+      return;
+    }
+    form.reset();
   }
 
   return (
@@ -62,7 +74,7 @@ export default function InfoBuyForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
-          name="name"
+          name="nameClient"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Họ và tên</FormLabel>

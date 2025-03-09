@@ -1,6 +1,6 @@
-import type React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
-import { Edit, MoreHorizontal, Trash } from "lucide-react";
+import { Edit, Eye, MoreHorizontal, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,15 +30,6 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -49,55 +40,29 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { api, IError } from "@/api/api.ts";
+import { PropagateLoader } from "react-spinners";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
 
-// Mock data for orders
-const ordersData = [
-  {
-    id: "ORD001",
-    idBook: "1",
-    nameClient: "Nguyễn Văn A",
-    phoneNumber: "0912345678",
-    address: "123 Đường Lê Lợi, Quận 1, TP.HCM",
-    note: "Giao hàng ngoài giờ hành chính",
-    status: "pending",
-  },
-  {
-    id: "ORD002",
-    idBook: "3",
-    nameClient: "Trần Thị B",
-    phoneNumber: "0987654321",
-    address: "456 Đường Nguyễn Huệ, Quận 1, TP.HCM",
-    note: "Gọi trước khi giao",
-    status: "processing",
-  },
-  {
-    id: "ORD003",
-    idBook: "2",
-    nameClient: "Lê Văn C",
-    phoneNumber: "0909123456",
-    address: "789 Đường Cách Mạng Tháng 8, Quận 3, TP.HCM",
-    note: "",
-    status: "completed",
-  },
-  {
-    id: "ORD004",
-    idBook: "5",
-    nameClient: "Phạm Thị D",
-    phoneNumber: "0976543210",
-    address: "101 Đường Võ Văn Tần, Quận 3, TP.HCM",
-    note: "Đóng gói cẩn thận",
-    status: "completed",
-  },
-  {
-    id: "ORD005",
-    idBook: "4",
-    nameClient: "Hoàng Văn E",
-    phoneNumber: "0918765432",
-    address: "202 Đường Điện Biên Phủ, Quận Bình Thạnh, TP.HCM",
-    note: "Giao vào buổi sáng",
-    status: "cancelled",
-  },
-];
+interface Order {
+  id: string;
+  idBook: string;
+  nameClient: string;
+  phoneNumber: string;
+  address: string;
+  note: string;
+  status: "pending" | "processing" | "completed" | "cancelled";
+}
+
+interface Book {
+  id: string;
+  name: string;
+  price: string;
+  image: string;
+  description: string;
+  type: "new" | "sale";
+}
 
 const statusMap = {
   pending: { label: "Chờ xử lý", color: "bg-yellow-500" },
@@ -107,7 +72,17 @@ const statusMap = {
 };
 
 export default function OrdersAdminPage() {
-  const [orders, setOrders] = useState(ordersData);
+  const [loading, setLoading] = useState(false);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [bookOrders, setBookOrders] = useState<Book>({
+    id: "",
+    name: "",
+    price: "",
+    image: "",
+    description: "",
+    type: "new",
+  });
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentOrder, setCurrentOrder] = useState({
@@ -119,22 +94,92 @@ export default function OrdersAdminPage() {
     note: "",
     status: "pending",
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 10;
+  const indexOfLastItem = currentPage * limit;
+  const indexOfFirstItem = indexOfLastItem - limit;
 
-  const handleEditOrder = (e: React.FormEvent) => {
+  useEffect(() => {
+    setLoading(true);
+    const fetchOrders = async (): Promise<Order[]> => {
+      const response = await api.get("/order/pagination", {
+        params: { page: currentPage, limit },
+      });
+      const { rows, count } = response.data;
+      setOrders(rows);
+      setTotalPages(Math.ceil(count / limit));
+      return rows;
+    };
+    fetchOrders().then(() => setLoading(false));
+  }, [currentPage]);
+
+  const handleEditOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    const updatedOrders = orders.map((order) =>
-      order.id === currentOrder.id ? currentOrder : order,
-    );
-    setOrders(updatedOrders);
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("status", currentOrder.status);
     setIsEditDialogOpen(false);
+
+    try {
+      const response = await api.put(`/order/${currentOrder.id}`, {
+        status: formData.get("status"),
+      });
+      console.log(response.data);
+      toast.success("Cập nhật đơn hàng thành công");
+      orders.map((order) => {
+        if (order.id === currentOrder.id) {
+          order.status = currentOrder.status as Order["status"];
+        }
+      });
+    } catch (error) {
+      if (error instanceof AxiosError && error.response) {
+        const dataError = error.response.data as IError;
+        if (dataError && dataError.message) {
+          toast.error(dataError.message);
+          console.log(dataError.message);
+        }
+      } else {
+        toast.error("Có lỗi xảy ra khi cập nhật sách");
+        console.error(error);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDeleteOrder = () => {
-    const updatedOrders = orders.filter(
-      (order) => order.id !== currentOrder.id,
-    );
-    setOrders(updatedOrders);
+  const handleDeleteOrder = async () => {
+    setLoading(true);
     setIsDeleteDialogOpen(false);
+    try {
+      await api.delete(`/order/${currentOrder.id}`);
+      toast.success("Xóa đơn hàng thành công");
+      const updatedOrders = orders.filter(
+        (order) => order.id !== currentOrder.id,
+      );
+      setOrders(updatedOrders);
+    } catch (error) {
+      if (error instanceof AxiosError && error.response) {
+        const dataError = error.response.data as IError;
+        if (dataError && dataError.message) {
+          toast.error(dataError.message);
+          console.log(dataError.message);
+        }
+      } else {
+        toast.error("Có lỗi xảy ra khi xóa đơn hàng");
+        console.error(error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openViewDialog = async (order: typeof currentOrder) => {
+    setCurrentOrder(order);
+    const response = await api.get(`/order/get-by-id/${order.id}`);
+    const { book } = response.data;
+    setBookOrders(book);
+    setIsViewDialogOpen(true);
   };
 
   const openEditDialog = (order: typeof currentOrder) => {
@@ -154,90 +199,109 @@ export default function OrdersAdminPage() {
       </div>
 
       <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[100px]">Mã đơn</TableHead>
-              <TableHead className="w-[80px]">Mã sách</TableHead>
-              <TableHead>Khách hàng</TableHead>
-              <TableHead>Số điện thoại</TableHead>
-              <TableHead className="hidden md:table-cell">Địa chỉ</TableHead>
-              <TableHead className="hidden md:table-cell">Ghi chú</TableHead>
-              <TableHead>Trạng thái</TableHead>
-              <TableHead className="w-[100px]">Thao tác</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {orders.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell>{order.id}</TableCell>
-                <TableCell>{order.idBook}</TableCell>
-                <TableCell className="font-medium">
-                  {order.nameClient}
-                </TableCell>
-                <TableCell>{order.phoneNumber}</TableCell>
-                <TableCell className="hidden max-w-[200px] truncate md:table-cell">
-                  {order.address}
-                </TableCell>
-                <TableCell className="hidden max-w-[200px] truncate md:table-cell">
-                  {order.note || "Không có"}
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    className={`${statusMap[order.status as keyof typeof statusMap].color} text-white`}
-                  >
-                    {statusMap[order.status as keyof typeof statusMap].label}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => openEditDialog(order)}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Sửa
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => openDeleteDialog(order)}>
-                        <Trash className="mr-2 h-4 w-4" />
-                        Xóa
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+        {loading ? (
+          <div className="flex items-center justify-center h-32">
+            <PropagateLoader loading={loading} size={32} color="#FF6D67" />
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[100px]">Mã đơn</TableHead>
+                <TableHead className="w-[80px]">Mã sách</TableHead>
+                <TableHead>Khách hàng</TableHead>
+                <TableHead>Số điện thoại</TableHead>
+                <TableHead className="hidden md:table-cell">Địa chỉ</TableHead>
+                <TableHead className="hidden md:table-cell">Ghi chú</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead className="w-[100px]">Thao tác</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {orders.map((order, index) => (
+                <TableRow key={order.id}>
+                  <TableCell>ORD{index + 1}</TableCell>
+                  <TableCell className="text-ellipsis max-w-[100px] truncate">
+                    {order.idBook.substring(0, 8)}
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    {order.nameClient}
+                  </TableCell>
+                  <TableCell>{order.phoneNumber}</TableCell>
+                  <TableCell className="hidden max-w-[200px] truncate md:table-cell">
+                    {order.address}
+                  </TableCell>
+                  <TableCell className="hidden max-w-[200px] truncate md:table-cell">
+                    {order.note || "Không có"}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      className={`${statusMap[order.status as keyof typeof statusMap].color} text-white`}
+                    >
+                      {statusMap[order.status as keyof typeof statusMap].label}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => openViewDialog(order)}>
+                          <Eye className="mr-2 h-4 w-4" />
+                          Xem chi tiết
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openEditDialog(order)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Sửa
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => openDeleteDialog(order)}
+                        >
+                          <Trash className="mr-2 h-4 w-4" />
+                          Xóa
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </div>
 
-      <Pagination>
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious href="#" />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#" isActive>
-              1
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#">2</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationEllipsis />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationNext href="#" />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+      {/* Pagination */}
+      <div className="flex items-center justify-between space-x-2 py-4">
+        <div className="text-sm text-muted-foreground">
+          Showing {indexOfFirstItem + 1}-
+          {Math.min(indexOfLastItem, orders?.length || 0)} of{" "}
+          {orders?.length || 0} items
+        </div>
+        <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -259,7 +323,7 @@ export default function OrdersAdminPage() {
                   onChange={(e) =>
                     setCurrentOrder({
                       ...currentOrder,
-                      status: e.target.value,
+                      status: e.target.value as Order["status"],
                     })
                   }
                 >
@@ -274,13 +338,8 @@ export default function OrdersAdminPage() {
                 <Input
                   id="edit-nameClient"
                   value={currentOrder.nameClient}
-                  onChange={(e) =>
-                    setCurrentOrder({
-                      ...currentOrder,
-                      nameClient: e.target.value,
-                    })
-                  }
                   required
+                  disabled
                 />
               </div>
               <div className="grid gap-2">
@@ -288,13 +347,8 @@ export default function OrdersAdminPage() {
                 <Input
                   id="edit-phoneNumber"
                   value={currentOrder.phoneNumber}
-                  onChange={(e) =>
-                    setCurrentOrder({
-                      ...currentOrder,
-                      phoneNumber: e.target.value,
-                    })
-                  }
                   required
+                  disabled
                 />
               </div>
               <div className="grid gap-2">
@@ -302,27 +356,13 @@ export default function OrdersAdminPage() {
                 <Input
                   id="edit-address"
                   value={currentOrder.address}
-                  onChange={(e) =>
-                    setCurrentOrder({
-                      ...currentOrder,
-                      address: e.target.value,
-                    })
-                  }
                   required
+                  disabled
                 />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-note">Ghi chú</Label>
-                <Textarea
-                  id="edit-note"
-                  value={currentOrder.note}
-                  onChange={(e) =>
-                    setCurrentOrder({
-                      ...currentOrder,
-                      note: e.target.value,
-                    })
-                  }
-                />
+                <Textarea id="edit-note" value={currentOrder.note} disabled />
               </div>
             </div>
             <DialogFooter>
@@ -334,6 +374,70 @@ export default function OrdersAdminPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Chi tiết đơn hàng</DialogTitle>
+            <DialogDescription>
+              Thông tin chi tiết đơn hàng {currentOrder.id}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-y-4">
+            <div className="flex items-center gap-x-4">
+              <p className="font-bold">Tên khách hàng:</p>
+              <p>{currentOrder.nameClient}</p>
+            </div>
+            <div className="flex items-center gap-x-4">
+              <p className="font-bold">Số điện thoại:</p>
+              <p>{currentOrder.phoneNumber}</p>
+            </div>
+            <div className="flex items-center gap-x-4">
+              <p className="font-bold">Địa chỉ:</p>
+              <p>{currentOrder.address}</p>
+            </div>
+            <div className="flex items-center gap-x-4">
+              <p className="font-bold">Ghi chú:</p>
+              <p>{currentOrder.note}</p>
+            </div>
+            <div className="flex items-center gap-x-4">
+              <p className="font-bold">Trạng thái:</p>
+              <Badge
+                className={`${statusMap[currentOrder.status as keyof typeof statusMap].color} text-white`}
+              >
+                {statusMap[currentOrder.status as keyof typeof statusMap].label}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-x-4">
+              <p className="font-bold">Tên sách:</p>
+              <p>{bookOrders.name}</p>
+            </div>
+            <div className="flex items-center gap-x-4">
+              <p className="font-bold">Giá:</p>
+              <p>{bookOrders.price}</p>
+            </div>
+            <div className="flex items-center gap-x-4">
+              <p className="font-bold">Mã sách:</p>
+              <p>{bookOrders.id}</p>
+            </div>
+            <div className="flex items-center gap-x-4">
+              <img
+                src={bookOrders.image}
+                alt="book"
+                className="h-32 w-32 object-cover"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              className="bg-blue-500 text-white font-bold flex justify-center hover:bg-blue-600"
+              onClick={() => setIsViewDialogOpen(false)}
+            >
+              Đóng
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

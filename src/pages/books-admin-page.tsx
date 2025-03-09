@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import { Edit, MoreHorizontal, Plus, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,15 +31,6 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -49,72 +40,164 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { api, IError } from "@/api/api.ts";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
+import { PropagateLoader } from "react-spinners";
 
-const booksData = [
-  {
-    id: "1",
-    name: "Shin - Cậu bé bút chì - Tập 1",
-    price: "19500",
-    image: "/book-new1.png",
-    description: "Truyện tranh hài hước dành cho thiếu nhi",
-  },
-  {
-    id: "2",
-    name: "Naruto - Quyển 20",
-    price: "21000",
-    image: "/book-new2.png",
-    description: "Truyện tranh về ninja",
-  },
-  {
-    id: "3",
-    name: "One Piece - Tập 101",
-    price: "25000",
-    image: "/book-new3.png",
-    description: "Truyện tranh về hải tặc",
-  },
-  {
-    id: "4",
-    name: "Chú thuật hồi chiến - Tập 1",
-    price: "30000",
-    image: "/book-new4.png",
-    description: "Truyện tranh về phép thuật",
-  },
-];
+interface Book {
+  id: string;
+  name: string;
+  price: string;
+  image: string;
+  description: string;
+  type: "new" | "sale";
+}
 
 export default function BooksAdminPage() {
-  const [books, setBooks] = useState(booksData);
+  const [loading, setLoading] = useState(false);
+  const [books, setBooks] = useState<Book[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [currentBook, setCurrentBook] = useState({
+  const [file, setFile] = useState<File>();
+  const [currentBook, setCurrentBook] = useState<Book>({
     id: "",
     name: "",
     price: "",
     image: "",
     description: "",
+    type: "new",
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 10;
+  const indexOfLastItem = currentPage * limit;
+  const indexOfFirstItem = indexOfLastItem - limit;
 
-  const handleAddBook = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newBook = {
-      ...currentBook,
-      id: (books.length + 1).toString(),
+  useEffect(() => {
+    const fetchBooks = async () => {
+      setLoading(true);
+      try {
+        const response = await api.get("/book/pagination", {
+          params: { page: currentPage, limit },
+        });
+        setBooks(response.data.rows);
+        setTotalPages(Math.ceil(response.data.count / limit));
+      } catch (error) {
+        if (error instanceof AxiosError && error.response) {
+          const dataError = error.response.data as IError;
+          if (dataError && dataError.message) {
+            toast.error(dataError.message);
+            console.log(dataError.message);
+          }
+        } else {
+          toast.error("Có lỗi xảy ra khi lấy danh sách sách");
+          console.error(error);
+        }
+      } finally {
+        setLoading(false);
+      }
     };
-    setBooks([...books, newBook]);
-    setIsAddDialogOpen(false);
-    setCurrentBook({ id: "", name: "", price: "", image: "", description: "" });
-  };
+    fetchBooks();
+  }, [currentPage]);
 
-  const handleEditBook = (e: React.FormEvent) => {
+  const handleAddBook = async (e: React.FormEvent) => {
     e.preventDefault();
-    const updatedBooks = books.map((book) =>
-      book.id === currentBook.id ? currentBook : book,
-    );
-    setBooks(updatedBooks);
-    setIsEditDialogOpen(false);
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("name", currentBook.name);
+    formData.append("price", currentBook.price);
+    formData.append("description", currentBook.description);
+
+    if (file) {
+      formData.append("image", file);
+    }
+    setIsAddDialogOpen(false);
+    try {
+      const response = await api.post("/book", formData);
+      setBooks((prev) =>
+        prev ? [...prev, response.data.data] : [response.data.data],
+      );
+      toast.success("Thêm sách thành công");
+      setCurrentBook({
+        id: "",
+        name: "",
+        price: "",
+        image: "",
+        description: "",
+        type: "new",
+      });
+      setFile(undefined);
+    } catch (error) {
+      if (error instanceof AxiosError && error.response) {
+        const dataError = error.response.data as IError;
+        if (dataError && dataError.message) {
+          toast.error(dataError.message);
+          console.log(dataError.message);
+        }
+      } else {
+        toast.error("Có lỗi xảy ra khi thêm sách");
+        console.error(error);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDeleteBook = () => {
+  const handleEditBook = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("name", currentBook.name);
+    formData.append("price", currentBook.price);
+    formData.append("description", currentBook.description);
+    formData.append("type", currentBook.type);
+
+    if (file) {
+      formData.append("image", file);
+    }
+
+    setIsEditDialogOpen(false);
+    try {
+      await api.put(`/book/${currentBook.id}`, formData);
+      toast.success("Cập nhật sách thành công");
+      const updatedBooks = books.map((book) =>
+        book.id === currentBook.id ? currentBook : book,
+      );
+      setBooks(updatedBooks);
+    } catch (error) {
+      if (error instanceof AxiosError && error.response) {
+        const dataError = error.response.data as IError;
+        if (dataError && dataError.message) {
+          toast.error(dataError.message);
+          console.log(dataError.message);
+        }
+      } else {
+        toast.error("Có lỗi xảy ra khi cập nhật sách");
+        console.error(error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteBook = async () => {
+    try {
+      await api.delete(`/book/${currentBook.id}`);
+      toast.success("Xóa sách thành công");
+    } catch (error) {
+      if (error instanceof AxiosError && error.response) {
+        const dataError = error.response.data as IError;
+        if (dataError && dataError.message) {
+          toast.error(dataError.message);
+          console.log(dataError.message);
+        }
+      } else {
+        toast.error("Có lỗi xảy ra khi xóa sách");
+        console.error(error);
+      }
+    }
     const updatedBooks = books.filter((book) => book.id !== currentBook.id);
     setBooks(updatedBooks);
     setIsDeleteDialogOpen(false);
@@ -173,16 +256,18 @@ export default function BooksAdminPage() {
                     required
                   />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="image">URL Hình ảnh</Label>
+                <div className="grid gap-2 w-full">
+                  <Label htmlFor="image">Hình ảnh</Label>
                   <Input
                     id="image"
-                    value={currentBook.image}
-                    onChange={(e) =>
-                      setCurrentBook({ ...currentBook, image: e.target.value })
-                    }
-                    placeholder="/placeholder.svg"
-                    required
+                    type="file"
+                    className="w-full"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setFile(file);
+                      }
+                    }}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -214,90 +299,112 @@ export default function BooksAdminPage() {
       </div>
 
       <div className="rounded-md border w-full">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[80px]">ID</TableHead>
-              <TableHead className="w-[80px]">Hình ảnh</TableHead>
-              <TableHead>Tên sách</TableHead>
-              <TableHead>Giá (VNĐ)</TableHead>
-              <TableHead className="hidden md:table-cell">Mô tả</TableHead>
-              <TableHead className="w-[100px]">Thao tác</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {books.map((book) => (
-              <TableRow key={book.id}>
-                <TableCell>{book.id}</TableCell>
-                <TableCell>
-                  <img
-                    src={book.image || "/placeholder.svg"}
-                    alt={book.name}
-                    width={40}
-                    height={50}
-                    className="rounded-sm object-cover"
-                  />
-                </TableCell>
-                <TableCell className="font-medium">{book.name}</TableCell>
-                <TableCell>
-                  {Number.parseInt(book.price).toLocaleString("vi-VN")}₫
-                </TableCell>
-                <TableCell className="hidden max-w-[300px] truncate md:table-cell">
-                  {book.description}
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => openEditDialog(book)}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Sửa
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => openDeleteDialog(book)}>
-                        <Trash className="mr-2 h-4 w-4" />
-                        Xóa
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+        {loading ? (
+          <div className="flex items-center justify-center h-32">
+            <PropagateLoader loading={loading} size={32} color="#FF6D67" />
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[80px]">STT</TableHead>
+                <TableHead className="w-[80px]">Hình ảnh</TableHead>
+                <TableHead>Tên sách</TableHead>
+                <TableHead>Giá (VNĐ)</TableHead>
+                <TableHead>Loại</TableHead>
+                <TableHead className="hidden md:table-cell">Mô tả</TableHead>
+                <TableHead className="w-[100px]">Thao tác</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+
+            <TableBody>
+              {books.map((book, index) => (
+                <TableRow key={book.id}>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>
+                    <img
+                      src={book.image || "/placeholder.svg"}
+                      alt={book.name}
+                      width={40}
+                      height={50}
+                      className="rounded-sm object-cover"
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium">{book.name}</TableCell>
+                  <TableCell>
+                    {Number.parseInt(book.price).toLocaleString("vi-VN")}₫
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`px-2 py-1 rounded-md text-xs font-medium ${
+                        book.type === "new"
+                          ? "bg-green-500 text-white"
+                          : "bg-blue-500 text-white"
+                      }`}
+                    >
+                      {book.type === "new" ? "Mới" : "Bán chạy"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="hidden max-w-[300px] truncate md:table-cell">
+                    {book.description}
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+
+                        <DropdownMenuItem onClick={() => openEditDialog(book)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Sửa
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => openDeleteDialog(book)}
+                        >
+                          <Trash className="mr-2 h-4 w-4" />
+                          Xóa
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </div>
 
-      <div>
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious href="#" />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#" isActive>
-                1
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">2</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">3</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationEllipsis />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext href="#" />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+      {/* Pagination */}
+      <div className="flex items-center justify-between space-x-2 py-4 w-full">
+        <div className="text-sm text-muted-foreground">
+          Showing {indexOfFirstItem + 1}-
+          {Math.min(indexOfLastItem, books?.length || 0)} of{" "}
+          {books?.length || 0} items
+        </div>
+        <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </Button>
+        </div>
       </div>
 
       {/* Edit Dialog */}
@@ -335,15 +442,34 @@ export default function BooksAdminPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-image">URL Hình ảnh</Label>
+                <Label htmlFor="edit-image">Hình ảnh</Label>
                 <Input
                   id="edit-image"
-                  value={currentBook.image}
-                  onChange={(e) =>
-                    setCurrentBook({ ...currentBook, image: e.target.value })
-                  }
-                  required
+                  type="file"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setFile(file);
+                    }
+                  }}
                 />
+              </div>
+              <div className="w-full gap-y-2 flex flex-col">
+                <Label htmlFor="edit-status">Trạng thái</Label>
+                <select
+                  id="edit-status"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={currentBook.type}
+                  onChange={(e) =>
+                    setCurrentBook({
+                      ...currentBook,
+                      type: e.target.value as "new" | "sale",
+                    })
+                  }
+                >
+                  <option value="new">Mới</option>
+                  <option value="sale">Bán chạy</option>
+                </select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-description">Mô tả</Label>

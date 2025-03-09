@@ -12,13 +12,20 @@ import { Button } from "@/components/ui/button.tsx";
 import InfoBuyForm from "@/components/info-buy-form.tsx";
 
 interface BookCardProps {
-  title: string;
+  name: string;
   image: string;
   price: number;
   description: string;
+  id: string;
 }
 
-export default function BookCard({ title, image, price }: BookCardProps) {
+export default function BookCard({
+  name,
+  image,
+  price,
+  description,
+  id,
+}: BookCardProps) {
   return (
     <div className="p-4">
       <Dialog>
@@ -27,15 +34,15 @@ export default function BookCard({ title, image, price }: BookCardProps) {
             <div className="overflow-hidden w-[200px]">
               <img
                 src={image || "/placeholder.svg"}
-                alt={title}
+                alt={name}
                 width={400}
                 height={400}
-                className="h-[200px] w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                className="h-[300px] w-full object-cover rounded-2xl transition-transform duration-300 group-hover:scale-105"
               />
             </div>
             <div className="flex flex-col gap-y-1 items-start">
               <h3 className="line-clamp-2s text-sm font-medium group-hover:text-primary">
-                {title}
+                {name}
               </h3>
               <p className="font-semibold text-red-600 mt-1">
                 {Number(price).toLocaleString("vi-VN")} vnd
@@ -47,7 +54,12 @@ export default function BookCard({ title, image, price }: BookCardProps) {
           <DialogHeader>
             <DialogTitle>Thông tin chi tiết</DialogTitle>
             <DialogDescription>
-              <ProductDetailCard />
+              <ProductDetailCard
+                name={name}
+                description={description}
+                image={image}
+                price={price}
+              />
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -61,7 +73,7 @@ export default function BookCard({ title, image, price }: BookCardProps) {
                 <DialogHeader>
                   <DialogTitle>Điền thông tin</DialogTitle>
                   <DialogDescription>
-                    <InfoBuyForm />
+                    <InfoBuyForm idBook={id} />
                   </DialogDescription>
                 </DialogHeader>
               </DialogContent>

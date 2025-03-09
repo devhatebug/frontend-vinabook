@@ -13,6 +13,8 @@ export default function AdminLayout() {
       setActive("books");
     } else if (location.pathname.includes("admin/orders")) {
       setActive("orders");
+    } else {
+      setActive("home");
     }
   }, [location.pathname]);
 
@@ -39,6 +41,18 @@ export default function AdminLayout() {
       <div className="flex flex-1">
         <aside className="w-64 border-r bg-muted/40">
           <nav className="grid gap-2 p-4">
+            <Link to="/admin">
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start gap-2",
+                  active === "home" ? "bg-neutral-200 text-black" : "",
+                )}
+              >
+                <Home className="h-5 w-5" />
+                Bảng điều khiển
+              </Button>
+            </Link>
             <Link to="/admin/books">
               <Button
                 variant="ghost"
