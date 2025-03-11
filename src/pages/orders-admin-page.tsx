@@ -385,7 +385,7 @@ export default function OrdersAdminPage() {
               Thông tin chi tiết đơn hàng {currentOrder.id}
             </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col gap-y-4">
+          <div className="flex flex-col gap-y-4 break-words">
             <div className="flex items-center gap-x-4">
               <p className="font-bold">Tên khách hàng:</p>
               <p>{currentOrder.nameClient}</p>
@@ -394,9 +394,11 @@ export default function OrdersAdminPage() {
               <p className="font-bold">Số điện thoại:</p>
               <p>{currentOrder.phoneNumber}</p>
             </div>
-            <div className="flex items-center gap-x-4">
+            <div className="flex items-center gap-x-4 break-words text-pretty">
               <p className="font-bold">Địa chỉ:</p>
-              <p>{currentOrder.address}</p>
+              <p className="flex-1 items-center gap-x-4 break-words max-w-[400px]">
+                {currentOrder.address}
+              </p>
             </div>
             <div className="flex items-center gap-x-4">
               <p className="font-bold">Ghi chú:</p>
