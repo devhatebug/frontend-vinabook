@@ -37,6 +37,7 @@ pnpm run build
 
 ### Features
 
+- search books follow name, description
 - order book
 - view book
 - contact us

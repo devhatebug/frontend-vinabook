@@ -22,7 +22,7 @@ export default function HomePage() {
   useEffect(() => {
     setLoading(true);
     const fetchBooks = async (): Promise<Book[]> => {
-      const response = await api.get("/book");
+      const response = await api.get("/book/get-all");
       const books = response.data || [];
       setBookNews(books.filter((book: Book) => book.type === "new"));
       setBookBestSellers(books.filter((book: Book) => book.type === "sale"));

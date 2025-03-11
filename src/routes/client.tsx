@@ -4,6 +4,7 @@ import ClientLayout from "@/layout/client.layout.tsx";
 import HomePage from "@/pages/home.page.tsx";
 import ContactPage from "@/pages/contact-page.tsx";
 import AboutPage from "@/pages/about-page.tsx";
+import SearchPage from "@/pages/search-page.tsx";
 
 const _clientRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -26,5 +27,10 @@ export const clientRoute = _clientRoute.addChildren([
     getParentRoute: () => _clientRoute,
     path: "/about",
     component: AboutPage,
+  }),
+  createRoute({
+    getParentRoute: () => _clientRoute,
+    path: "/search",
+    component: SearchPage,
   }),
 ]);

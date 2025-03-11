@@ -1,10 +1,24 @@
-import { Link, Outlet } from "@tanstack/react-router";
-import { Search, ShoppingCart, User, Inbox, Phone } from "lucide-react";
+import { Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { Search, Inbox, Phone, BicepsFlexed, Smile } from "lucide-react";
 import { Input } from "@/components/ui/input.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
+import { FormEvent, useState } from "react";
 
 export default function ClientLayout() {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (e: FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate({
+        to: `/client/search`,
+        search: { q: encodeURIComponent(searchQuery) },
+      }).then();
+    }
+  };
+
   return (
     <div className="mx-auto">
       <div className={"mx-auto text-center text-xs p-2"}>
@@ -18,27 +32,27 @@ export default function ClientLayout() {
             <img src="/logo.png" width="200" height="34" alt="logo" />
           </Link>
           <div className="w-3xl">
-            <div className="relative w-full bg-[#F5F5F5] rounded-lg shadow-none">
-              <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Tìm kiếm thông tin sách..."
-                className="w-full pl-8 h-[40px]"
-              />
+            <div className="hidden md:flex md:w-[400px] lg:w-[500px]">
+              <form onSubmit={handleSearch} className="relative w-full">
+                <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Tìm kiếm thông tin sách..."
+                  className="w-full pl-8"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </form>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <Link to="/">
-              <Button variant="ghost" size="icon" aria-label="Account">
-                <User className="h-5 w-5" />
-              </Button>
-            </Link>
-            <Link to="/">
-              <Button variant="ghost" size="icon" aria-label="Cart">
-                <ShoppingCart className="h-5 w-5" />
-                <span className="sr-only">Cart</span>
-              </Button>
-            </Link>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" aria-label="Account">
+              <BicepsFlexed className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" aria-label="Cart">
+              <Smile className="h-5 w-5" />
+              <span className="sr-only">Cart</span>
+            </Button>
           </div>
         </div>
         <Separator />
