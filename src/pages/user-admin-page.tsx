@@ -397,7 +397,7 @@ export default function UsersAdminPage() {
                   }
                 >
                   <option value="admin">Admin</option>
-                  <option value="client">Client</option>
+                  <option value="user">Client</option>
                 </select>
               </div>
             </div>
