@@ -9,6 +9,7 @@ import {
 import { clientRoute } from "@/routes/client";
 import { adminRoute } from "@/routes/admin.tsx";
 import { rootRoute } from "@/routes/__root.tsx";
+import { authRoute } from "@/routes/auth.tsx";
 import { Toaster } from "@/components/ui/sonner.tsx";
 
 const redirectRoute = createRoute({
@@ -24,6 +25,7 @@ const routeTree = rootRoute.addChildren([
   clientRoute,
   redirectRoute,
   adminRoute,
+  authRoute,
 ]);
 
 declare module "@tanstack/react-router" {
@@ -48,6 +50,6 @@ if (!rootElement.innerHTML) {
     <StrictMode>
       <RouterProvider router={router} />
       <Toaster />
-    </StrictMode>,
+    </StrictMode>
   );
 }

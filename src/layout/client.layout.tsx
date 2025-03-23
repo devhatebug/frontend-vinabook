@@ -1,13 +1,16 @@
 import { Link, Outlet, useNavigate } from "@tanstack/react-router";
-import { Search, Inbox, Phone, BicepsFlexed, Smile } from "lucide-react";
+import { Search, Inbox, Phone, User, ShoppingCart } from "lucide-react";
 import { Input } from "@/components/ui/input.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
+import { Badge } from "@/components/ui/badge.tsx";
+import useCart from "@/store/useCart";
 
 export default function ClientLayout() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const { cartQuantity, fetchCart } = useCart();
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
@@ -17,6 +20,17 @@ export default function ClientLayout() {
         search: { q: encodeURIComponent(searchQuery) },
       }).then();
     }
+  };
+  useEffect(() => {
+    fetchCart().then();
+  }, [fetchCart]);
+
+  const goToCart = () => {
+    navigate({ to: "/client/cart" }).then();
+  };
+
+  const goToAccount = () => {
+    navigate({ to: "/auth/login" }).then();
   };
 
   return (
@@ -46,12 +60,29 @@ export default function ClientLayout() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" aria-label="Account">
-              <BicepsFlexed className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" aria-label="Cart">
-              <Smile className="h-5 w-5" />
-              <span className="sr-only">Cart</span>
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Account"
+                onClick={goToCart}
+              >
+                <ShoppingCart className="h-5 w-5" />
+              </Button>
+              <Badge
+                className="absolute -right-1 text-[12px] w-4 h-4"
+                variant="destructive"
+              >
+                {cartQuantity > 0 ? cartQuantity : "0"}
+              </Badge>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Cart"
+              onClick={goToAccount}
+            >
+              <User className="h-5 w-5" />
             </Button>
           </div>
         </div>

@@ -34,6 +34,7 @@ pnpm run build
 - TanStack/react-router
 - React Spinners
 - ShadCn ui
+- Zustand
 
 ### Features
 

@@ -4,6 +4,7 @@ import AdminLayout from "@/layout/admin.layout.tsx";
 import AdminPage from "@/pages/admin-page.tsx";
 import BooksAdminPage from "@/pages/books-admin-page.tsx";
 import OrdersAdminPage from "@/pages/orders-admin-page.tsx";
+import UsersAdminPage from "@/pages/user-admin-page";
 
 const _adminRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -26,5 +27,10 @@ export const adminRoute = _adminRoute.addChildren([
     getParentRoute: () => _adminRoute,
     path: "/orders",
     component: OrdersAdminPage,
+  }),
+  createRoute({
+    getParentRoute: () => _adminRoute,
+    path: "/users",
+    component: UsersAdminPage,
   }),
 ]);

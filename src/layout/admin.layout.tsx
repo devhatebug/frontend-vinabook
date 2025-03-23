@@ -1,4 +1,4 @@
-import { BookOpen, Home, Package, Settings } from "lucide-react";
+import { BookOpen, Home, Package, Settings, User } from "lucide-react";
 import { Link, Outlet, useLocation } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,8 @@ export default function AdminLayout() {
       setActive("books");
     } else if (location.pathname.includes("admin/orders")) {
       setActive("orders");
+    } else if (location.pathname.includes("admin/users")) {
+      setActive("users");
     } else {
       setActive("home");
     }
@@ -46,7 +48,7 @@ export default function AdminLayout() {
                 variant="ghost"
                 className={cn(
                   "w-full justify-start gap-2",
-                  active === "home" ? "bg-neutral-200 text-black" : "",
+                  active === "home" ? "bg-neutral-200 text-black" : ""
                 )}
               >
                 <Home className="h-5 w-5" />
@@ -58,7 +60,7 @@ export default function AdminLayout() {
                 variant="ghost"
                 className={cn(
                   "w-full justify-start gap-2",
-                  active === "books" ? "bg-neutral-200 text-black" : "",
+                  active === "books" ? "bg-neutral-200 text-black" : ""
                 )}
               >
                 <BookOpen className="h-5 w-5" />
@@ -70,11 +72,23 @@ export default function AdminLayout() {
                 variant="ghost"
                 className={cn(
                   "w-full justify-start gap-2",
-                  active === "orders" ? "bg-neutral-200 text-black" : "",
+                  active === "orders" ? "bg-neutral-200 text-black" : ""
                 )}
               >
                 <Package className="h-5 w-5" />
                 Quản lý đơn hàng
+              </Button>
+            </Link>
+            <Link to="/admin/users">
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start gap-2",
+                  active === "users" ? "bg-neutral-200 text-black" : ""
+                )}
+              >
+                <User className="h-5 w-5" />
+                Quản lý người dùng
               </Button>
             </Link>
           </nav>

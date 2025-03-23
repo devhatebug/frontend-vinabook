@@ -53,6 +53,7 @@ interface Order {
   address: string;
   note: string;
   status: "pending" | "processing" | "completed" | "cancelled";
+  quantity: number;
 }
 
 interface Book {
@@ -93,6 +94,7 @@ export default function OrdersAdminPage() {
     address: "",
     note: "",
     status: "pending",
+    quantity: 0,
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -155,7 +157,7 @@ export default function OrdersAdminPage() {
       await api.delete(`/order/${currentOrder.id}`);
       toast.success("Xóa đơn hàng thành công");
       const updatedOrders = orders.filter(
-        (order) => order.id !== currentOrder.id,
+        (order) => order.id !== currentOrder.id
       );
       setOrders(updatedOrders);
     } catch (error) {
@@ -209,6 +211,7 @@ export default function OrdersAdminPage() {
               <TableRow>
                 <TableHead className="w-[100px]">Mã đơn</TableHead>
                 <TableHead className="w-[80px]">Mã sách</TableHead>
+                <TableHead className="w-[80px]">Số lượng</TableHead>
                 <TableHead>Khách hàng</TableHead>
                 <TableHead>Số điện thoại</TableHead>
                 <TableHead className="hidden md:table-cell">Địa chỉ</TableHead>
@@ -223,6 +226,9 @@ export default function OrdersAdminPage() {
                   <TableCell>ORD{index + 1}</TableCell>
                   <TableCell className="text-ellipsis max-w-[100px] truncate">
                     {order.idBook.substring(0, 8)}
+                  </TableCell>
+                  <TableCell className="text-ellipsis max-w-[100px] truncate">
+                    {order.quantity}
                   </TableCell>
                   <TableCell className="font-medium">
                     {order.nameClient}
@@ -415,6 +421,10 @@ export default function OrdersAdminPage() {
             <div className="flex items-center gap-x-4">
               <p className="font-bold">Tên sách:</p>
               <p>{bookOrders.name}</p>
+            </div>
+            <div className="flex items-center gap-x-4">
+              <p className="font-bold">Số lượng:</p>
+              <p>{currentOrder.quantity}</p>
             </div>
             <div className="flex items-center gap-x-4">
               <p className="font-bold">Giá:</p>

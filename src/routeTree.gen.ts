@@ -12,6 +12,7 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as ClientImport } from './routes/client'
+import { Route as AuthImport } from './routes/auth'
 import { Route as AdminImport } from './routes/admin'
 
 // Create/Update Routes
@@ -19,6 +20,12 @@ import { Route as AdminImport } from './routes/admin'
 const ClientRoute = ClientImport.update({
   id: '/client',
   path: '/client',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const AuthRoute = AuthImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -39,6 +46,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminImport
       parentRoute: typeof rootRoute
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthImport
+      parentRoute: typeof rootRoute
+    }
     '/client': {
       id: '/client'
       path: '/client'
@@ -53,36 +67,41 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
+  '/auth': typeof AuthRoute
   '/client': typeof ClientRoute
 }
 
 export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
+  '/auth': typeof AuthRoute
   '/client': typeof ClientRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/admin': typeof AdminRoute
+  '/auth': typeof AuthRoute
   '/client': typeof ClientRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/admin' | '/client'
+  fullPaths: '/admin' | '/auth' | '/client'
   fileRoutesByTo: FileRoutesByTo
-  to: '/admin' | '/client'
-  id: '__root__' | '/admin' | '/client'
+  to: '/admin' | '/auth' | '/client'
+  id: '__root__' | '/admin' | '/auth' | '/client'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
+  AuthRoute: typeof AuthRoute
   ClientRoute: typeof ClientRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
+  AuthRoute: AuthRoute,
   ClientRoute: ClientRoute,
 }
 
@@ -97,11 +116,15 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/admin",
+        "/auth",
         "/client"
       ]
     },
     "/admin": {
       "filePath": "admin.tsx"
+    },
+    "/auth": {
+      "filePath": "auth.tsx"
     },
     "/client": {
       "filePath": "client.tsx"
