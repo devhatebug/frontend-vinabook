@@ -179,7 +179,8 @@ export default function OrdersAdminPage() {
   const openViewDialog = async (order: typeof currentOrder) => {
     setCurrentOrder(order);
     const response = await api.get(`/order/get-by-id/${order.id}`);
-    const { book } = response.data;
+    console.log(response.data.book[0]);
+    const book = response.data.book[0];
     setBookOrders(book);
     setIsViewDialogOpen(true);
   };
@@ -428,7 +429,7 @@ export default function OrdersAdminPage() {
             </div>
             <div className="flex items-center gap-x-4">
               <p className="font-bold">Giá:</p>
-              <p>{bookOrders.price}</p>
+              <p>{parseFloat(bookOrders.price) * currentOrder.quantity}</p>
             </div>
             <div className="flex items-center gap-x-4">
               <p className="font-bold">Mã sách:</p>
