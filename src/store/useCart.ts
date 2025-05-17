@@ -34,7 +34,8 @@ interface CartState {
     phoneNumber: string;
     address: string;
     note: string;
-  }) => Promise<void>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }) => Promise<any>;
 }
 
 const useCart = create<CartState>((set, get) => ({
@@ -140,12 +141,13 @@ const useCart = create<CartState>((set, get) => ({
       address,
       note,
     })
-      .then(() => {
+      .then((res) => {
         const state = get();
         toast.success("Đặt hàng thành công");
         set({ cart: [], cartQuantity: 0 });
         state.resetCartQuantity();
         state.fetchCart();
+        return res;
       })
       .catch((error) => {
         if (error instanceof AxiosError && error.response) {

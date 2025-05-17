@@ -44,8 +44,7 @@ import { api, IError } from '@/api/api.ts';
 import { PropagateLoader } from 'react-spinners';
 import { AxiosError } from 'axios';
 import { toast } from 'sonner';
-
-interface Order {
+export interface Order {
     id: string;
     idBook: string;
     nameClient: string;
@@ -54,6 +53,8 @@ interface Order {
     note: string;
     status: 'pending' | 'processing' | 'completed' | 'canceled';
     quantity: number;
+    createAt: string;
+    updateAt: string;
 }
 
 interface Book {

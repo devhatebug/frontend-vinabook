@@ -33,17 +33,27 @@ export function BillingPage() {
         note: '',
     });
 
-    const handlePaymentMethodChange = () => {
+    const handlePaymentMethodChange = async () => {
         setOrderStatus('processing');
-        payCart({
-            cartItemIds,
-            nameClient: shippingInfo.nameClient,
-            phoneNumber: shippingInfo.phoneNumber,
-            address: shippingInfo.address,
-            note: shippingInfo.note,
-        }).then(() => {
-            setOrderStatus('success');
-        });
+        try {
+            const response = await payCart({
+                cartItemIds,
+                nameClient: shippingInfo.nameClient,
+                phoneNumber: shippingInfo.phoneNumber,
+                address: shippingInfo.address,
+                note: shippingInfo.note,
+            });
+
+            if (response || response.status === 'success') {
+                setOrderStatus('success');
+            } else {
+                setOrderStatus('pending');
+                toast.error('Đặt hàng thất bại, vui lòng thử lại sau!');
+            }
+        } catch (error) {
+            setOrderStatus('pending');
+            console.log(error);
+        }
     };
 
     const handleInputChange = (

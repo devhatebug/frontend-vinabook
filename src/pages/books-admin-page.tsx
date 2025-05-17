@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useState } from 'react';
 import { Edit, MoreHorizontal, Plus, Trash } from 'lucide-react';
+import type { LabelType } from './label-admin-page';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -54,19 +55,21 @@ import { AxiosError } from 'axios';
 import { toast } from 'sonner';
 import { PropagateLoader } from 'react-spinners';
 
-interface Book {
+export interface Book {
     id: string;
     name: string;
     price: string;
     image: string;
     description: string;
     type: 'new' | 'sale';
-    label: string;
+    labelId: string;
+    quantity: string;
 }
 
 export default function BooksAdminPage() {
     const [loading, setLoading] = useState(false);
     const [books, setBooks] = useState<Book[]>([]);
+    const [labels, setLabels] = useState<LabelType[]>([]);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -78,7 +81,8 @@ export default function BooksAdminPage() {
         image: '',
         description: '',
         type: 'new',
-        label: '',
+        labelId: '',
+        quantity: '',
     });
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -94,8 +98,8 @@ export default function BooksAdminPage() {
                 const response = await api.get('/book/pagination', {
                     params: { page: currentPage, limit },
                 });
-                setBooks(response.data.rows);
-                setTotalPages(Math.ceil(response.data.count / limit));
+                setBooks(response.data.data);
+                setTotalPages(response.data.totalPages);
             } catch (error) {
                 if (error instanceof AxiosError && error.response) {
                     const dataError = error.response.data as IError;
@@ -111,6 +115,24 @@ export default function BooksAdminPage() {
                 setLoading(false);
             }
         };
+        const fetchLabels = async () => {
+            try {
+                const response = await api.get('/label/get-all');
+                setLabels(response.data);
+            } catch (error) {
+                if (error instanceof AxiosError && error.response) {
+                    const dataError = error.response.data as IError;
+                    if (dataError && dataError.message) {
+                        toast.error(dataError.message);
+                        console.log(dataError.message);
+                    }
+                } else {
+                    toast.error('Có lỗi xảy ra khi lấy danh sách nhãn');
+                    console.error(error);
+                }
+            }
+        };
+        fetchLabels();
         fetchBooks();
     }, [currentPage]);
 
@@ -121,7 +143,8 @@ export default function BooksAdminPage() {
         formData.append('name', currentBook.name);
         formData.append('price', currentBook.price);
         formData.append('description', currentBook.description);
-        formData.append('label', currentBook.label);
+        formData.append('labelId', currentBook.labelId);
+        formData.append('quantity', currentBook.quantity.toString());
 
         if (file) {
             formData.append('image', file);
@@ -140,7 +163,8 @@ export default function BooksAdminPage() {
                 image: '',
                 description: '',
                 type: 'new',
-                label: '',
+                labelId: '',
+                quantity: '',
             });
             setFile(undefined);
         } catch (error) {
@@ -167,7 +191,8 @@ export default function BooksAdminPage() {
         formData.append('price', currentBook.price);
         formData.append('description', currentBook.description);
         formData.append('type', currentBook.type);
-        formData.append('label', currentBook.label);
+        formData.append('labelId', currentBook.labelId);
+        formData.append('quantity', currentBook.quantity.toString());
 
         if (file) {
             formData.append('image', file);
@@ -216,6 +241,16 @@ export default function BooksAdminPage() {
         const updatedBooks = books.filter((book) => book.id !== currentBook.id);
         setBooks(updatedBooks);
         setIsDeleteDialogOpen(false);
+        setCurrentBook({
+            id: '',
+            name: '',
+            price: '',
+            image: '',
+            description: '',
+            type: 'new',
+            labelId: '',
+            quantity: '',
+        });
     };
 
     const openEditDialog = (book: typeof currentBook) => {
@@ -268,11 +303,11 @@ export default function BooksAdminPage() {
                                 <div className="grid gap-2">
                                     <Label htmlFor="label">Nhãn</Label>
                                     <Select
-                                        value={currentBook.label}
+                                        value={currentBook.labelId}
                                         onValueChange={(value) =>
                                             setCurrentBook({
                                                 ...currentBook,
-                                                label: value,
+                                                labelId: value,
                                             })
                                         }
                                     >
@@ -281,33 +316,14 @@ export default function BooksAdminPage() {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectGroup>
-                                                <SelectItem value="Sách giáo khoa">
-                                                    Sách giáo khoa
-                                                </SelectItem>
-                                                <SelectItem value="Truyện">
-                                                    Truyện
-                                                </SelectItem>
-                                                <SelectItem value="Tiểu thuyết">
-                                                    Tiểu thuyết
-                                                </SelectItem>
-                                                <SelectItem value="Khoa học">
-                                                    Khoa học
-                                                </SelectItem>
-                                                <SelectItem value="Lịch sử">
-                                                    Lịch sử
-                                                </SelectItem>
-                                                <SelectItem value="Văn học">
-                                                    Văn học
-                                                </SelectItem>
-                                                <SelectItem value="Kinh tế">
-                                                    Kinh tế
-                                                </SelectItem>
-                                                <SelectItem value="Tâm lý">
-                                                    Tâm lý
-                                                </SelectItem>
-                                                <SelectItem value="Tâm linh">
-                                                    Tâm linh
-                                                </SelectItem>
+                                                {labels.map((label) => (
+                                                    <SelectItem
+                                                        key={label.id}
+                                                        value={label.id}
+                                                    >
+                                                        {label.name}
+                                                    </SelectItem>
+                                                ))}
                                             </SelectGroup>
                                         </SelectContent>
                                     </Select>
@@ -322,6 +338,21 @@ export default function BooksAdminPage() {
                                             setCurrentBook({
                                                 ...currentBook,
                                                 price: e.target.value,
+                                            })
+                                        }
+                                        required
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="quantity">Số lượng</Label>
+                                    <Input
+                                        id="quantity"
+                                        type="number"
+                                        value={currentBook.quantity}
+                                        onChange={(e) =>
+                                            setCurrentBook({
+                                                ...currentBook,
+                                                quantity: e.target.value,
                                             })
                                         }
                                         required
@@ -390,6 +421,7 @@ export default function BooksAdminPage() {
                                 <TableHead>Nhãn</TableHead>
                                 <TableHead>Giá (VNĐ)</TableHead>
                                 <TableHead>Loại</TableHead>
+                                <TableHead>Số lượng</TableHead>
                                 <TableHead className="hidden md:table-cell">
                                     Mô tả
                                 </TableHead>
@@ -419,7 +451,10 @@ export default function BooksAdminPage() {
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant="secondary">
-                                            {book.label}
+                                            {labels.find(
+                                                (label) =>
+                                                    label.id === book.labelId
+                                            )?.name || 'Chưa có nhãn'}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
@@ -441,6 +476,7 @@ export default function BooksAdminPage() {
                                                 : 'Bán chạy'}
                                         </span>
                                     </TableCell>
+                                    <TableCell>{book.quantity || 0}</TableCell>
                                     <TableCell className="hidden max-w-[300px] truncate md:table-cell">
                                         {book.description}
                                     </TableCell>
@@ -544,11 +580,11 @@ export default function BooksAdminPage() {
                             <div className="grid gap-2">
                                 <Label htmlFor="edit-label">Nhãn</Label>
                                 <Select
-                                    value={currentBook.label}
+                                    value={currentBook.labelId}
                                     onValueChange={(value) =>
                                         setCurrentBook({
                                             ...currentBook,
-                                            label: value,
+                                            labelId: value,
                                         })
                                     }
                                 >
@@ -557,33 +593,14 @@ export default function BooksAdminPage() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectGroup>
-                                            <SelectItem value="Sách giáo khoa">
-                                                Sách giáo khoa
-                                            </SelectItem>
-                                            <SelectItem value="Truyện">
-                                                Truyện
-                                            </SelectItem>
-                                            <SelectItem value="Tiểu thuyết">
-                                                Tiểu thuyết
-                                            </SelectItem>
-                                            <SelectItem value="Khoa học">
-                                                Khoa học
-                                            </SelectItem>
-                                            <SelectItem value="Lịch sử">
-                                                Lịch sử
-                                            </SelectItem>
-                                            <SelectItem value="Văn học">
-                                                Văn học
-                                            </SelectItem>
-                                            <SelectItem value="Kinh tế">
-                                                Kinh tế
-                                            </SelectItem>
-                                            <SelectItem value="Tâm lý">
-                                                Tâm lý
-                                            </SelectItem>
-                                            <SelectItem value="Tâm linh">
-                                                Tâm linh
-                                            </SelectItem>
+                                            {labels.map((label) => (
+                                                <SelectItem
+                                                    key={label.id}
+                                                    value={label.id}
+                                                >
+                                                    {label.name}
+                                                </SelectItem>
+                                            ))}
                                         </SelectGroup>
                                     </SelectContent>
                                 </Select>
@@ -598,6 +615,21 @@ export default function BooksAdminPage() {
                                         setCurrentBook({
                                             ...currentBook,
                                             price: e.target.value,
+                                        })
+                                    }
+                                    required
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="quantity">Số lượng</Label>
+                                <Input
+                                    id="quantity"
+                                    type="number"
+                                    value={currentBook.quantity}
+                                    onChange={(e) =>
+                                        setCurrentBook({
+                                            ...currentBook,
+                                            quantity: e.target.value,
                                         })
                                     }
                                     required

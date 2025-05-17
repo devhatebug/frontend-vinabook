@@ -4,6 +4,7 @@ type BookItem = {
   price: number;
   image: string;
   description: string;
+  quantity: number;
 };
 
 export type CartItem = {

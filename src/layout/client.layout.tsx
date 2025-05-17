@@ -38,8 +38,6 @@ export default function ClientLayout() {
     const fetchLabels = async () => {
         try {
             const response = await getAllLabels();
-            console.log('Response:', response);
-
             if (response && response.data) {
                 if (response.data.data && Array.isArray(response.data.data)) {
                     setLabels(response.data.data);

@@ -12,6 +12,7 @@ interface Book {
     description: string;
     type: string;
     label: string;
+    quantity?: number;
 }
 
 export default function SearchPage() {
@@ -22,7 +23,7 @@ export default function SearchPage() {
         setLoading(true);
         const fetchBooks = async (): Promise<Book[]> => {
             const response = await api.get('/book/get-all');
-            const books = response.data || [];
+            const books = response.data.data || [];
             setBooksData(books);
             return books;
         };
@@ -91,6 +92,7 @@ export default function SearchPage() {
                                         price={book.price}
                                         description={book.description}
                                         id={book.id}
+                                        quantity={book.quantity}
                                     />
                                 ))}
                             </div>

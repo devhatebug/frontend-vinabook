@@ -16,16 +16,114 @@ import { AxiosError } from 'axios';
 import { IError } from '@/api/api';
 import { IUser } from '@/types/user';
 import useUser from '@/store/useUser';
+import { useState, useEffect } from 'react';
+import { api } from '@/api/api';
 
 export function LoginPage() {
     const router = useRouter();
     const { setUser, user, resetUser } = useUser();
     const token = localStorage.getItem('token');
 
+    // State cho việc chỉnh sửa thông tin
+    const [isEditing, setIsEditing] = useState({
+        email: false,
+        username: false,
+        password: false,
+    });
+
+    // State lưu thông tin đang được chỉnh sửa
+    const [editedInfo, setEditedInfo] = useState({
+        email: '',
+        username: '',
+        password: '',
+    });
+
+    // State kiểm tra nếu có thay đổi so với dữ liệu ban đầu
+    const [hasChanges, setHasChanges] = useState(false);
+
+    // Cập nhật dữ liệu ban đầu khi user thay đổi
+    useEffect(() => {
+        if (user) {
+            setEditedInfo({
+                email: user.email || '',
+                username: user.username || '',
+                password: '',
+            });
+        }
+    }, [user]);
+
+    // Kiểm tra nếu có thay đổi
+    useEffect(() => {
+        if (user) {
+            const hasEmailChange = editedInfo.email !== user.email;
+            const hasUsernameChange = editedInfo.username !== user.username;
+            const hasPasswordChange = editedInfo.password !== '';
+
+            setHasChanges(
+                hasEmailChange || hasUsernameChange || hasPasswordChange
+            );
+        }
+    }, [editedInfo, user]);
+
     const handleLogout = () => {
         localStorage.removeItem('token');
         resetUser();
         toast.success('Đăng xuất thành công');
+    };
+
+    // Hàm xử lý khi click vào trường thông tin
+    const handleEdit = (field: string) => {
+        setIsEditing((prev) => ({
+            ...prev,
+            [field]: true,
+        }));
+    };
+
+    // Hàm xử lý khi thay đổi giá trị
+    const handleChange = (
+        e: React.ChangeEvent<HTMLInputElement>,
+        field: string
+    ) => {
+        setEditedInfo((prev) => ({
+            ...prev,
+            [field]: e.target.value,
+        }));
+    };
+
+    // Hàm lưu thông tin người dùng
+    const handleSaveChanges = async () => {
+        try {
+            await api.put(`/user/${user?.id}`, {
+                email: editedInfo.email,
+                username: editedInfo.username,
+                ...(editedInfo.password
+                    ? { password: editedInfo.password }
+                    : {}),
+            });
+            setUser({
+                id: user?.id || '',
+                email: editedInfo.email,
+                username: editedInfo.username,
+                role: user?.role || '',
+            });
+
+            setIsEditing({
+                email: false,
+                username: false,
+                password: false,
+            });
+
+            setEditedInfo((prev) => ({
+                ...prev,
+                password: '',
+            }));
+
+            setHasChanges(false);
+            toast.success('Cập nhật thông tin thành công');
+        } catch (error) {
+            toast.error('Cập nhật thông tin thất bại');
+            console.error(error);
+        }
     };
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -84,16 +182,96 @@ export function LoginPage() {
                             </div>
                             <div className="grid gap-2">
                                 <Label>Email</Label>
-                                <p className="text-gray-700">{user.email}</p>
+                                {isEditing.email ? (
+                                    <Input
+                                        value={editedInfo.email}
+                                        onChange={(e) =>
+                                            handleChange(e, 'email')
+                                        }
+                                        onBlur={() =>
+                                            setIsEditing((prev) => ({
+                                                ...prev,
+                                                email: false,
+                                            }))
+                                        }
+                                        autoFocus
+                                    />
+                                ) : (
+                                    <p
+                                        className="text-gray-700 cursor-pointer hover:text-blue-500 hover:underline"
+                                        onClick={() => handleEdit('email')}
+                                    >
+                                        {user.email}
+                                    </p>
+                                )}
                             </div>
                             <div className="grid gap-2">
                                 <Label>Tên đăng nhập</Label>
-                                <p className="text-gray-700">{user.username}</p>
+                                {isEditing.username ? (
+                                    <Input
+                                        value={editedInfo.username}
+                                        onChange={(e) =>
+                                            handleChange(e, 'username')
+                                        }
+                                        onBlur={() =>
+                                            setIsEditing((prev) => ({
+                                                ...prev,
+                                                username: false,
+                                            }))
+                                        }
+                                        autoFocus
+                                    />
+                                ) : (
+                                    <p
+                                        className="text-gray-700 cursor-pointer hover:text-blue-500 hover:underline"
+                                        onClick={() => handleEdit('username')}
+                                    >
+                                        {user.username}
+                                    </p>
+                                )}
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Mật khẩu</Label>
+                                {isEditing.password ? (
+                                    <Input
+                                        type="password"
+                                        value={editedInfo.password}
+                                        onChange={(e) =>
+                                            handleChange(e, 'password')
+                                        }
+                                        onBlur={() =>
+                                            setIsEditing((prev) => ({
+                                                ...prev,
+                                                password: false,
+                                            }))
+                                        }
+                                        placeholder="Nhập mật khẩu mới"
+                                        autoFocus
+                                    />
+                                ) : (
+                                    <p
+                                        className="text-gray-700 cursor-pointer hover:text-blue-500 hover:underline"
+                                        onClick={() => handleEdit('password')}
+                                    >
+                                        ••••••••
+                                    </p>
+                                )}
                             </div>
                             <div className="grid gap-2">
                                 <Label>Vai trò</Label>
                                 <p className="text-gray-700">{user.role}</p>
                             </div>
+
+                            {/* Hiển thị nút Lưu khi có thay đổi */}
+                            {hasChanges && (
+                                <Button
+                                    onClick={handleSaveChanges}
+                                    className="w-full bg-green-500 text-white font-semibold hover:bg-green-600 mt-2"
+                                >
+                                    Lưu thay đổi
+                                </Button>
+                            )}
+
                             <Button
                                 onClick={handleLogout}
                                 className="w-full bg-red-500 text-white font-semibold hover:bg-red-600 mt-2"
