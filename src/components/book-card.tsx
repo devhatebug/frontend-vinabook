@@ -10,8 +10,9 @@ import {
 import ProductDetailCard from '@/components/product-detail-card.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import InfoBuyForm from '@/components/info-buy-form.tsx';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, ShoppingBasket } from 'lucide-react';
 import useCart from '@/store/useCart';
+
 interface BookCardProps {
     name: string;
     image: string;
@@ -35,23 +36,30 @@ export default function BookCard({
         <div className="p-4">
             <Dialog>
                 <DialogTrigger asChild>
-                    <div className="flex flex-col items-start gap-y-2">
-                        <div className="overflow-hidden w-[200px]">
+                    <div className="flex flex-col items-center border border-gray-200 rounded-md bg-white shadow-sm h-80 w-64">
+                        <div className="overflow-hidden w-full h-48">
                             <img
                                 src={image || '/placeholder.svg'}
                                 alt={name}
                                 width={400}
                                 height={400}
-                                className="h-[300px] w-full object-cover rounded-2xl transition-transform duration-300 group-hover:scale-105"
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-t-md"
                             />
                         </div>
-                        <div className="flex flex-col gap-y-1 items-start">
-                            <h3 className="line-clamp-2s text-sm font-medium group-hover:text-primary">
+                        <div className="flex flex-col items-center justify-between w-full px-4 py-3 h-32">
+                            <h3 className="text-base font-medium text-gray-800 text-center line-clamp-2">
                                 {name}
                             </h3>
-                            <p className="font-semibold text-red-600 mt-1">
-                                {Number(price).toLocaleString('vi-VN')} vnd
+                            <p className="font-medium text-xl text-red-600 mt-1">
+                                {Number(price).toLocaleString('vi-VN')} đ
                             </p>
+                            <Button
+                                className="w-full mt-2 bg-red-800 hover:bg-red-700 text-white font-semibold rounded-md py-2"
+                                disabled={quantity === 0}
+                            >
+                                <ShoppingBasket className="size-6" />
+                                ĐẶT HÀNG
+                            </Button>
                         </div>
                     </div>
                 </DialogTrigger>
@@ -71,11 +79,11 @@ export default function BookCard({
                     <DialogFooter>
                         <div className="flex flex-wrap items-center gap-x-2 ">
                             <Button
-                                className=" bg-blue-500 text-white hover:bg-blue-600"
+                                className="bg-blue-500 text-white hover:bg-blue-600"
                                 disabled={quantity === 0}
                                 onClick={() => addToCart(id)}
                             >
-                                <ShoppingCart className="h-4 w-4" />
+                                <ShoppingCart className="h-4 w-4 mr-2" />
                                 THÊM VÀO GIỎ HÀNG
                             </Button>
                             <Dialog>

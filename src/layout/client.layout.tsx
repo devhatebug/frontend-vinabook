@@ -1,15 +1,28 @@
 import { Link, Outlet, useNavigate } from '@tanstack/react-router';
-import { Search, Inbox, Phone, User, ShoppingCart } from 'lucide-react';
+import {
+    Search,
+    MoveRight,
+    User,
+    ShoppingCart,
+    Map,
+    Phone,
+    Mail,
+    Facebook,
+    Twitter,
+    Instagram,
+    Youtube,
+} from 'lucide-react';
 import { Input } from '@/components/ui/input.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import { Separator } from '@/components/ui/separator.tsx';
 import { FormEvent, useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge.tsx';
 import useCart from '@/store/useCart';
+import useUser from '@/store/useUser';
 import { getAllLabels } from '@/api/book';
 
 export default function ClientLayout() {
     const navigate = useNavigate();
+    const { user } = useUser();
     const [searchQuery, setSearchQuery] = useState('');
     const { cartQuantity, fetchCart } = useCart();
     const [labels, setLabels] = useState<string[]>([]);
@@ -63,13 +76,8 @@ export default function ClientLayout() {
 
     return (
         <div className="mx-auto">
-            <div className={'mx-auto text-center text-xs p-2'}>
-                Hotline Mua Hàng: 0973 285 886 | Hotline CSKH: 1900 886 803 -
-                Ext 1 | Email CSKH: vinabook@gmail.com
-            </div>
-            <Separator />
             <header>
-                <div className="flex h-16 items-center justify-between py-4 px-4">
+                <div className="flex h-30 items-center justify-between py-4 px-4">
                     <Link to="/" className="flex items-center">
                         <img
                             src="/logo.png"
@@ -84,11 +92,11 @@ export default function ClientLayout() {
                                 onSubmit={handleSearch}
                                 className="relative w-full"
                             >
-                                <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                 <Input
                                     type="search"
                                     placeholder="Tìm kiếm thông tin sách..."
-                                    className="w-full pl-8"
+                                    className="w-full pl-12 rounded-full bg-neutral-500/10 text-sm text-muted-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background h-12"
                                     value={searchQuery}
                                     onChange={(e) =>
                                         setSearchQuery(e.target.value)
@@ -98,57 +106,60 @@ export default function ClientLayout() {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="relative">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                aria-label="Account"
-                                onClick={goToCart}
-                            >
-                                <ShoppingCart className="h-5 w-5" />
-                            </Button>
-                            <Badge
-                                className="absolute -right-1 text-[12px] w-4 h-4"
-                                variant="destructive"
-                            >
-                                {cartQuantity > 0 ? cartQuantity : '0'}
-                            </Badge>
-                        </div>
                         <Button
                             variant="ghost"
-                            size="icon"
                             aria-label="Cart"
+                            className="flex items-center gap-x-2 w-fit"
                             onClick={goToAccount}
                         >
-                            <User className="h-5 w-5" />
+                            <User className="size-8 text-green-500" />
+                            <div className="flex flex-col items-start">
+                                <div className="text-sm font-medium text-gray-700">
+                                    Tài khoản
+                                </div>
+                                <div className="uppercase">
+                                    {user?.username || 'Anonymous'}
+                                </div>
+                            </div>
                         </Button>
+
+                        <div
+                            className="flex items-center gap-2 "
+                            onClick={goToCart}
+                        >
+                            <div className="relative">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label="Account"
+                                >
+                                    <ShoppingCart className="size-8 text-green-500" />
+                                </Button>
+                                <Badge className="absolute -right-1 text-[12px] w-4 h-4 bg-green-500">
+                                    {cartQuantity > 0 ? cartQuantity : '0'}
+                                </Badge>
+                            </div>
+                            <div className="text-xl font-medium text-gray-700 cursor-pointer">
+                                Giỏ hàng
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <Separator />
-                <nav className=" hidden border-t py-2 md:block bg-green-600 text-white font-bold">
-                    <ul className="flex gap-6 w-xl mx-auto justify-center font-bold">
+                <nav className=" hidden border-t py-2 h-15 md:flex flex-col justify-center items-center ">
+                    <ul className="flex gap-12 mx-auto h-full justify-center text-xl mt-1 uppercase">
                         <li>
-                            <Link to="/client/home" className="text-sm">
-                                Trang chủ
-                            </Link>
+                            <Link to="/client/home">Trang chủ</Link>
                         </li>
                         <li>
-                            <Link to="/client/about" className="text-sm">
-                                Giới thiệu
-                            </Link>
+                            <Link to="/client/about">Giới thiệu</Link>
                         </li>
                         <li>
-                            <Link to="/client/contact" className="text-sm">
-                                Liên hệ
-                            </Link>
+                            <Link to="/client/contact">Liên hệ</Link>
                         </li>
                         {labels &&
                             labels.map((label) => (
                                 <li key={label}>
-                                    <Link
-                                        to={`/client/search?q="${label}"`}
-                                        className="text-sm"
-                                    >
+                                    <Link to={`/client/search?q="${label}"`}>
                                         {label}
                                     </Link>
                                 </li>
@@ -157,116 +168,194 @@ export default function ClientLayout() {
                 </nav>
             </header>
             <Outlet />
-            <div className="bg-gray-100 flex items-center justify-evenly h-16">
-                <div className="bg-gray-100 flex items-center justify-evenly h-16 mx-auto gap-x-12">
-                    <div className="flex items-center gap-x-4">
-                        <Inbox className="h-5 w-5" />
-                        <p className="text-sm">Đăng ký nhận tin</p>
-                    </div>
-                    <div>
-                        <Input
-                            type="email"
-                            placeholder="Nhập email của bạn"
-                            className="w-100 h-[40px]"
+            <div className="bg-gray-100 flex items-center justify-evenly h-50">
+                <div className="flex items-center gap-x-8">
+                    <Link
+                        to="/"
+                        className=" w-40 h-40 rounded-lg bg-white flex items-center justify-center p-2"
+                    >
+                        <img
+                            src="/logo.png"
+                            width="200"
+                            height="34"
+                            alt="logo"
                         />
+                    </Link>
+
+                    <div className="w-[1px] h-30 bg-gray-300"></div>
+                    <div className="flex flex-col items-start gap-y-2">
+                        <div className="text-2xl uppercase font-medium">
+                            Đăng ký nhận tin
+                        </div>
+                        <div className="text-base text-gray-500 font-semibold">
+                            Nhận thông tin mới nhất từ chúng tôi
+                        </div>
                     </div>
-                    <div className="flex items-center gap-x-4">
-                        <Phone className="h-5 w-5" />
-                        <p className="text-sm">Hỗ trợ / Mua hàng: 0123456789</p>
-                    </div>
+                </div>
+
+                <div className="flex items-center gap-x-4">
+                    <form onSubmit={handleSearch} className="relative w-full">
+                        <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder="Nhập email của bạn..."
+                            className="w-80 pl-12 rounded-full bg-neutral-500/10 text-sm text-muted-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background h-16"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </form>
+                    <Button
+                        variant="default"
+                        className="rounded-full bg-green-700 text-white font-semibold px-6 py-2 h-16 w-30"
+                        onClick={handleSearch}
+                    >
+                        Đăng ký
+                    </Button>
                 </div>
             </div>
             {/* Footer */}
-            <footer className="border-t bg-gray-50 px-4">
+            <footer className="border-t bg-gray-100 px-4">
                 <div className="py-10">
-                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
-                        <div>
-                            <h3 className="mb-4 text-lg font-bold">
-                                HỆ THỐNG CỬA HÀNG
+                    <div className="flex items-start gap-x-12 justify-center">
+                        <div className="w-70">
+                            <h3 className="mb-4 text-lg font-medium">
+                                VỀ CHÚNG TÔI
+                            </h3>
+                            <div>
+                                VInaBook là thương hiệu được thành lập vào năm
+                                2025 với tiêu chí đặt chất lượng sản phẩm lên
+                                hàng đầu
+                            </div>
+                            <div className="flex items-center gap-x-2 mt-2">
+                                <div className="rounded-full border-[0.5px] border-gray-500 w-12 h-12 flex items-center justify-center">
+                                    <Facebook className="size-5" />
+                                </div>
+                                <div className="rounded-full border-[0.5px] border-gray-500 w-12 h-12 flex items-center justify-center">
+                                    <Twitter className="size-5" />
+                                </div>
+                                <div className="rounded-full border-[0.5px] border-gray-500 w-12 h-12 flex items-center justify-center">
+                                    <Instagram className="size-5" />
+                                </div>
+                                <div className="rounded-full border-[0.5px] border-gray-500 w-12 h-12 flex items-center justify-center">
+                                    <Youtube className="size-5" />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="w-80">
+                            <h3 className="mb-4 text-lg font-medium">
+                                LIÊN KẾT
                             </h3>
                             <ul className="space-y-2 text-sm">
-                                <li>27 Chùa Bộc, Đống Đa, Hà Nội</li>
-                                <li>332 Tô Hiệu, Đống Đa, Hà Nội</li>
-                                <li>43 Cầu Giấy, Hà Nội, Hà Nội</li>
-                                <li>26 Đường Láng, Đống Đa, Hà Nội</li>
-                                <li>249 Xã Đàn, Đống Đa, Hà Nội</li>
+                                <li>
+                                    <Link
+                                        to="/"
+                                        className="hover:text-primary flex items-center"
+                                    >
+                                        <MoveRight className="inline mr-2 font-light size-3" />
+                                        Về chúng tôi
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to="/" className="hover:text-primary">
+                                        <MoveRight className="inline mr-2 font-light size-3" />
+                                        Các sản phẩm
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to="/" className="hover:text-primary">
+                                        <MoveRight className="inline mr-2 font-light size-3" />
+                                        Tin tức
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to="/" className="hover:text-primary">
+                                        <MoveRight className="inline mr-2 font-light size-3" />
+                                        Liên hệ
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to="/" className="hover:text-primary">
+                                        <MoveRight className="inline mr-2 font-light size-3" />
+                                        Điều khoản
+                                    </Link>
+                                </li>
+                            </ul>
+                        </div>
+                        <div className="w-80">
+                            <h3 className="mb-4 text-lg font-medium">
+                                CÁC SẢN PHẨM
+                            </h3>
+                            <ul className="space-y-2 text-sm">
+                                <li>
+                                    <Link
+                                        to="/"
+                                        className="hover:text-primary flex items-center"
+                                    >
+                                        <MoveRight className="inline mr-2 font-light size-3" />
+                                        Sách giáo khoa
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to="/" className="hover:text-primary">
+                                        <MoveRight className="inline mr-2 font-light size-3" />
+                                        Sách tham khảo
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to="/" className="hover:text-primary">
+                                        <MoveRight className="inline mr-2 font-light size-3" />
+                                        Sách văn học
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to="/" className="hover:text-primary">
+                                        <MoveRight className="inline mr-2 font-light size-3" />
+                                        Sách thiếu nhi
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to="/" className="hover:text-primary">
+                                        <MoveRight className="inline mr-2 font-light size-3" />
+                                        Sách ngoại ngữ
+                                    </Link>
+                                </li>
                             </ul>
                         </div>
                         <div>
-                            <h3 className="mb-4 text-lg font-bold">
-                                CHÍNH SÁCH & QUY ĐỊNH CHUNG
-                            </h3>
-                            <ul className="space-y-2 text-sm">
-                                <li>
-                                    <Link to="/" className="hover:text-primary">
-                                        Hướng Dẫn Mua Hàng
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to="/" className="hover:text-primary">
-                                        Hình Thức Thanh Toán
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to="/" className="hover:text-primary">
-                                        Quy Định Về Việc Xác Nhận Đơn Hàng
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to="/" className="hover:text-primary">
-                                        Chính Sách Đổi Trả
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to="/" className="hover:text-primary">
-                                        Chính Sách Bảo Mật
-                                    </Link>
-                                </li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h3 className="mb-4 text-lg font-bold">ĐỊA CHỈ</h3>
-                            <p className="mb-2 text-sm">
-                                CÔNG TY CỔ PHẦN THƯƠNG MẠI DỊCH VỤ
-                            </p>
-                            <p className="mb-2 text-sm">
-                                Ngõn 36/X, 61 Phương Liệt, Thanh Xuân, Phương
-                                Liệt, Thanh Xuân, Hà Nội
-                            </p>
-                            <p className="mb-2 text-sm">Facebook: vinabook</p>
-                            <p className="mb-2 text-sm">
-                                Email: vinabook@gmail.com
-                            </p>
-                            <p className="mb-2 text-sm">
-                                Hotline: 0123456789 - 0987654321
-                            </p>
-                        </div>
-                        <div>
-                            <h3 className="mb-4 text-lg font-bold">FANPAGE</h3>
-                            <div className="h-40 w-[300px] rounded-lg">
-                                <Link to={'/'}>
-                                    <img
-                                        src="/page-banner.png"
-                                        alt="Fanpage"
-                                        className="object-cover w-[300px] h-[160px]"
-                                    />
-                                </Link>
-                                <div className="flex items-center justify-between gap-x-8">
-                                    <img
-                                        src="/logo.png"
-                                        alt="Facebook"
-                                        className="w-1/3"
-                                    />
-                                    <p className="text-wrap text-sm right-0">
-                                        nhà sách vinabook 540.341 lượt thích
-                                    </p>
+                            <h3 className="mb-4 text-lg font-bold">LIÊN HỆ</h3>
+                            <div className="flex items-center gap-x-2">
+                                <div className="rounded-full bg-green-700 text-white w-12 h-12 flex items-center justify-center">
+                                    <Map className="size-5" />
+                                </div>
+                                <div className="text-base">
+                                    123 Đường ABC, Quận 1, TP.HCM
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-x-2 mt-2">
+                                <div className="rounded-full bg-green-700 text-white w-12 h-12 flex items-center justify-center">
+                                    <Phone className="size-5" />
+                                </div>
+
+                                <div className="text-base">
+                                    <p>0123 456 789</p>
+                                    <p> 0344 567 890</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-x-2 mt-2">
+                                <div className="rounded-full bg-green-700 text-white w-12 h-12 flex items-center justify-center">
+                                    <Mail className="size-5" />
+                                </div>
+
+                                <div className="text-base">
+                                    <p>abc@gail.com</p>
+                                    <p>inforabc@gmail.com</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div className="border-t bg-gray-100 py-4 text-center text-sm mt-2">
-                    <p>© 2023 BookStore. All rights reserved.</p>
+                    <p>© 2025 VinaBook. All rights reserved.</p>
                 </div>
             </footer>
         </div>

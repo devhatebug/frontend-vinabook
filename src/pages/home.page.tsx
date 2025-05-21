@@ -3,7 +3,7 @@ import NewsCard from '@/components/news-card';
 import { useState, useEffect } from 'react';
 import { api } from '@/api/api.ts';
 import { PropagateLoader } from 'react-spinners';
-
+import { Truck, ShieldCheck, Headset, CircleDollarSign } from 'lucide-react';
 interface Book {
     id: string;
     name: string;
@@ -17,18 +17,36 @@ interface Book {
 export default function HomePage() {
     const [loading, setLoading] = useState(false);
     const [bookNews, setBookNews] = useState<Book[]>([]);
-    const [bookBestSellers, setBookBestSellers] = useState<Book[]>([]);
-    const midIndex = Math.ceil(bookBestSellers.length / 2);
+
+    const cardItems = [
+        {
+            icon: Truck,
+            label: 'Giao hàng nhanh',
+            desc: 'Cho tất cả đơn hàng',
+        },
+        {
+            icon: ShieldCheck,
+            label: 'Sản phẩm an toàn',
+            desc: 'Cam kết chất lượng',
+        },
+        {
+            icon: Headset,
+            label: 'Hỗ trợ 24/7',
+            desc: 'Tất cả ngày trong tuần',
+        },
+        {
+            icon: CircleDollarSign,
+            label: 'Hoàn tiền',
+            desc: 'Hoàn tiền nếu không hài lòng',
+        },
+    ];
 
     useEffect(() => {
         setLoading(true);
         const fetchBooks = async (): Promise<Book[]> => {
             const response = await api.get('/book/get-all');
             const books = response.data.data || [];
-            setBookNews(books.filter((book: Book) => book.type === 'new'));
-            setBookBestSellers(
-                books.filter((book: Book) => book.type === 'sale')
-            );
+            setBookNews(books);
             return books;
         };
         fetchBooks().then(() => setLoading(false));
@@ -56,11 +74,33 @@ export default function HomePage() {
                             />
                         </section>
 
-                        {/* New Books Section */}
+                        {/* Card description */}
+                        <div className="grid grid-cols-4 mx-auto w-fit mt-10">
+                            {cardItems.map((item, index) => (
+                                <div
+                                    key={index}
+                                    className="flex flex-col items-center justify-center shadow-lg px-6 py-3 rounded-lg w-fit cursor-pointer"
+                                >
+                                    <div className="flex justify-start items-center gap-x-3">
+                                        <item.icon className="size-12 text-green-600" />
+                                        <div className="flex flex-col items-start">
+                                            <h3 className="text-lg font-bold">
+                                                {item.label}
+                                            </h3>
+                                            <p className="text-sm text-gray-500">
+                                                {item.desc}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        {/* Books Section */}
                         <section className="py-10 mx-auto max-w-6xl">
-                            <h2 className="mb-6 text-center text-2xl font-bold">
-                                SÁCH MỚI
+                            <h2 className=" text-center text-2xl w-2xl mx-auto font-medium uppercase">
+                                Khám phá sản phẩm của chúng tôi
                             </h2>
+                            <div className="w-xs h-[2px] bg-green-600 mx-auto mb-6"></div>
                             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 mx-auto">
                                 {bookNews.map((book, index) => (
                                     <BookCard
@@ -73,56 +113,6 @@ export default function HomePage() {
                                         quantity={book.quantity ?? 0}
                                     />
                                 ))}
-                            </div>
-                        </section>
-
-                        {/* Best Sellers Section */}
-                        <section className="py-10 mx-auto max-w-6xl">
-                            <h2 className="mb-6 text-center text-2xl font-bold">
-                                BÁN CHẠY NHẤT
-                            </h2>
-                            <div className="grid grid-cols-4 gap-x-4">
-                                {bookBestSellers
-                                    .slice(0, midIndex)
-                                    .map((book, index) => (
-                                        <BookCard
-                                            key={index}
-                                            name={book.name}
-                                            image={book.image}
-                                            price={book.price}
-                                            description={book.description}
-                                            id={book.id}
-                                            quantity={book.quantity ?? 0}
-                                        />
-                                    ))}
-                            </div>
-                        </section>
-
-                        {/* Self-help Books Banner */}
-                        <section className="py-6 mx-auto max-w-7xl">
-                            <img
-                                src="/banner-center.png"
-                                alt="Self-help Books Banner"
-                                className="object-cover w-full"
-                            />
-                        </section>
-
-                        {/* Self-help Books Section */}
-                        <section className="py-6 mx-auto max-w-6xl">
-                            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4">
-                                {bookBestSellers
-                                    .slice(midIndex)
-                                    .map((book, index) => (
-                                        <BookCard
-                                            key={index}
-                                            name={book.name}
-                                            image={book.image}
-                                            price={book.price}
-                                            description={book.description}
-                                            id={book.id}
-                                            quantity={book.quantity ?? 0}
-                                        />
-                                    ))}
                             </div>
                         </section>
 
