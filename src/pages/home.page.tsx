@@ -63,23 +63,23 @@ export default function HomePage() {
                     />
                 </div>
             ) : (
-                <div className="flex min-h-screen flex-col">
+                <div className="flex min-h-screen flex-col ">
                     <main className="flex-1">
                         {/* Hero Banner */}
-                        <section>
+                        <section className="max-w-[1500px] mx-auto">
                             <img
-                                src="/banner-hero.png"
+                                src="/banner.png"
                                 alt="Hero Banner"
-                                className="object-cover w-full"
+                                className="object-cover w-full h-[600px] rounded-lg"
                             />
                         </section>
 
                         {/* Card description */}
-                        <div className="grid grid-cols-4 mx-auto w-fit mt-10">
+                        <div className="grid grid-cols-4 mx-auto max-w-[1500px] w-full mt-10">
                             {cardItems.map((item, index) => (
                                 <div
                                     key={index}
-                                    className="flex flex-col items-center justify-center shadow-lg px-6 py-3 rounded-lg w-fit cursor-pointer"
+                                    className="flex flex-col items-center justify-center shadow-lg px-6 py-3 rounded-lg w-[360px] cursor-pointer"
                                 >
                                     <div className="flex justify-start items-center gap-x-3">
                                         <item.icon className="size-12 text-green-600" />
@@ -96,7 +96,7 @@ export default function HomePage() {
                             ))}
                         </div>
                         {/* Books Section */}
-                        <section className="py-10 mx-auto max-w-6xl">
+                        <section className="py-10 mx-auto max-w-[1500px]">
                             <h2 className=" text-center text-2xl w-2xl mx-auto font-medium uppercase">
                                 Khám phá sản phẩm của chúng tôi
                             </h2>
@@ -117,11 +117,12 @@ export default function HomePage() {
                         </section>
 
                         {/* News Section */}
-                        <section className="py-10 mx-auto max-w-6xl">
-                            <h2 className="mb-6 text-center text-2xl font-bold">
+                        <section className="py-10 mx-auto max-w-[1500px]">
+                            <h2 className=" text-center text-2xl w-2xl mx-auto font-medium uppercase">
                                 TIN TỨC
                             </h2>
-                            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                            <div className="w-12 h-[2px] bg-green-600 mx-auto mb-6"></div>
+                            <div className="grid grid-cols-1 md:grid-cols-4 w-full max-w-[1500px] mx-auto">
                                 <NewsCard
                                     title='THỬ THÁCH: MÙA "YÊU" - 100% NHẬN QUÀ'
                                     image="/news1.png"
@@ -139,6 +140,12 @@ export default function HomePage() {
                                     image="/news3.png"
                                     date="10/02/2023"
                                     excerpt="Trong dịp nghỉ Tết Dương lịch 2023, thời tiết Hà Nội đẹp, cùng hơi hơi se và có mưa..."
+                                />
+                                <NewsCard
+                                    title="Đón Tết Nguyên Đán 2023 - Mua sắm thả ga"
+                                    image="https://cdn.mediamart.vn/images/news/tt-nguyen-dan-2023-vao-ngay-nao-duong-lch_d559e3ef.jpg"
+                                    date="10/02/2023"
+                                    excerpt="Đón Tết Nguyên Đán 2023 - Mua sắm thả ga, giảm giá lên đến 50% cho tất cả sản phẩm..."
                                 />
                             </div>
                         </section>

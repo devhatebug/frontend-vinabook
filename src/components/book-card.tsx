@@ -36,8 +36,8 @@ export default function BookCard({
         <div className="p-4">
             <Dialog>
                 <DialogTrigger asChild>
-                    <div className="flex flex-col items-center border border-gray-200 rounded-md bg-white shadow-sm h-80 w-64">
-                        <div className="overflow-hidden w-full h-48">
+                    <div className="flex flex-col items-center border border-gray-200 rounded-md bg-white shadow-sm h-100 w-88">
+                        <div className="overflow-hidden w-full h-60">
                             <img
                                 src={image || '/placeholder.svg'}
                                 alt={name}
