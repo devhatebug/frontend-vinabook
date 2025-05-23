@@ -53,8 +53,8 @@ export interface Order {
     note: string;
     status: 'pending' | 'processing' | 'completed' | 'canceled';
     quantity: number;
-    createAt: string;
-    updateAt: string;
+    createdAt: string;
+    updatedAt: string;
 }
 
 interface Book {
@@ -232,6 +232,7 @@ export default function OrdersAdminPage() {
                                 <TableHead className="hidden md:table-cell">
                                     Ghi chú
                                 </TableHead>
+                                <TableHead>Thời gian</TableHead>
                                 <TableHead>Trạng thái</TableHead>
                                 <TableHead className="w-[100px]">
                                     Thao tác
@@ -257,6 +258,15 @@ export default function OrdersAdminPage() {
                                     </TableCell>
                                     <TableCell className="hidden max-w-[200px] truncate md:table-cell">
                                         {order.note || 'Không có'}
+                                    </TableCell>
+                                    <TableCell>
+                                        {new Date(
+                                            order.createdAt
+                                        ).toLocaleDateString('vi-VN', {
+                                            year: 'numeric',
+                                            month: '2-digit',
+                                            day: '2-digit',
+                                        })}
                                     </TableCell>
                                     <TableCell>
                                         <Badge

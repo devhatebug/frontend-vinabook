@@ -43,12 +43,19 @@ import { AxiosError } from 'axios';
 import { toast } from 'sonner';
 import { PropagateLoader } from 'react-spinners';
 
+enum LevelUser {
+    VIP = 0,
+    FAMILIAR = 1,
+    NORMAL = 2,
+}
+
 interface User {
     id: string;
     email: string;
     username: string;
     password?: string;
     role: 'admin' | 'user';
+    level: LevelUser;
 }
 
 export default function UsersAdminPage() {
@@ -62,6 +69,7 @@ export default function UsersAdminPage() {
         email: '',
         username: '',
         role: 'user',
+        level: 2,
     });
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -117,6 +125,7 @@ export default function UsersAdminPage() {
                 email: '',
                 username: '',
                 role: 'user',
+                level: 2,
             });
         } catch (error) {
             if (error instanceof AxiosError && error.response) {
@@ -319,6 +328,7 @@ export default function UsersAdminPage() {
                                     Email
                                 </TableHead>
                                 <TableHead>Tên đăng nhập</TableHead>
+                                <TableHead>Cấp độ</TableHead>
                                 <TableHead>Vai trò</TableHead>
                                 <TableHead className="w-[100px]">
                                     Thao tác
@@ -334,6 +344,25 @@ export default function UsersAdminPage() {
                                     </TableCell>
                                     <TableCell className="font-medium">
                                         {user.username}
+                                    </TableCell>
+                                    <TableCell>
+                                        <span
+                                            className={`px-2 py-1 rounded-md text-xs font-medium ${
+                                                user.level === LevelUser.VIP
+                                                    ? 'bg-green-500 text-white'
+                                                    : user.level ===
+                                                        LevelUser.FAMILIAR
+                                                      ? 'bg-yellow-500 text-white'
+                                                      : 'bg-gray-500 text-white'
+                                            }`}
+                                        >
+                                            {user.level === LevelUser.VIP
+                                                ? 'VIP'
+                                                : user.level ===
+                                                    LevelUser.FAMILIAR
+                                                  ? 'Thân quen'
+                                                  : 'Bình thường'}
+                                        </span>
                                     </TableCell>
                                     <TableCell>
                                         <span
