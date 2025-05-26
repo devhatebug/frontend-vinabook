@@ -65,7 +65,7 @@ export default function SearchPage() {
                         />
                     </div>
                 ) : (
-                    <div className="max-w-7xl mx-auto">
+                    <div className="max-w-[1500px] mx-auto">
                         {/* Search Results Header */}
                         <div className="mb-6">
                             <h1 className="text-2xl font-bold">
@@ -83,7 +83,7 @@ export default function SearchPage() {
                         </div>
 
                         {searchResults.length > 0 ? (
-                            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                            <div className="grid grid-cols-4 gap-4 ">
                                 {searchResults.map((book, index) => (
                                     <BookCard
                                         key={index}
@@ -92,7 +92,7 @@ export default function SearchPage() {
                                         price={book.price}
                                         description={book.description}
                                         id={book.id}
-                                        quantity={book.quantity}
+                                        quantity={book.quantity || 0}
                                     />
                                 ))}
                             </div>
